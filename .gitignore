@@ -5,3 +5,12 @@ db.sqlite3
 venv/
 .idea/
 allure-results/
+.pytest_cache/
+staticfiles/
+
+# 运行期数据（不入库；报告样例 report.html / defects.md 保留）
+runtime/
+reports/allure-results/
+reports/junit.xml
+reports/results.json
+reports/last_run.json

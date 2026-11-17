@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H5 商城接口回归 · 技术文档与博客</title>
+<style>
+  :root {
+    --bg: #f7f9fc; --surface: #ffffff; --ink: #172b4d; --muted: #5c6f8c;
+    --line: #e3ebf5; --brand: #1677ff; --brand-soft: #e8f3ff; --code-bg: #f4f7fb;
+    --radius: 14px; --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Microsoft YaHei", "Hiragino Sans GB", "Source Han Sans SC", sans-serif;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161d; --surface: #1a2029; --ink: #e6edf6; --muted: #9fb0c6;
+      --line: #2c3542; --brand: #6aa8ff; --brand-soft: #1c2c42; --code-bg: #141a22;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+    font-size: 15px; line-height: 1.85; }
+  a { color: var(--brand); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .topbar { position: sticky; top: 0; z-index: 20; background: var(--surface);
+    border-bottom: 1px solid var(--line); padding: 14px 26px; display: flex;
+    align-items: center; gap: 22px; flex-wrap: wrap; }
+  .brand { font-size: 17px; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }
+  .brand span { color: var(--brand); }
+  .tabs { display: flex; gap: 8px; }
+  .tab { border: 1px solid var(--line); background: transparent; color: var(--muted);
+    padding: 6px 16px; border-radius: 999px; cursor: pointer; font-size: 13.5px;
+    font-family: inherit; transition: .18s ease; }
+  .tab:hover { border-color: var(--brand); color: var(--brand); }
+  .tab.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .meta { margin-left: auto; color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+  .layout { display: flex; gap: 28px; max-width: 1240px; margin: 0 auto; padding: 28px 26px 80px; }
+  .toc { width: 236px; flex: none; position: sticky; top: 78px; align-self: flex-start;
+    max-height: calc(100vh - 110px); overflow-y: auto; padding-right: 8px; }
+  .toc-title { font-size: 12px; color: var(--muted); letter-spacing: 1.2px;
+    text-transform: uppercase; margin: 0 0 10px 10px; font-weight: 700; }
+  .toc-link { display: block; padding: 5px 10px; border-radius: 8px; color: var(--muted);
+    font-size: 13px; line-height: 1.5; border-left: 2px solid transparent; }
+  .toc-link:hover { background: var(--brand-soft); color: var(--brand); text-decoration: none; }
+  .toc-link.active { color: var(--brand); border-left-color: var(--brand);
+    background: var(--brand-soft); font-weight: 600; }
+  .toc-group { display: none; }
+  .toc-group.active { display: block; }
+  main { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 40px 48px 64px; }
+  article { display: none; }
+  article.active { display: block; }
+  h1 { font-size: 27px; line-height: 1.4; margin: 0 0 18px; letter-spacing: -.3px; }
+  h2 { font-size: 21px; margin: 46px 0 16px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--line); scroll-margin-top: 90px; }
+  .anchor { display: block; height: 0; scroll-margin-top: 90px; }
+  h3 { font-size: 17px; margin: 30px 0 12px; }
+  h4 { font-size: 15px; margin: 22px 0 10px; color: var(--muted); }
+  p { margin: 12px 0; }
+  strong { color: var(--ink); font-weight: 700; }
+  ul, ol { padding-left: 24px; margin: 12px 0; }
+  li { margin: 5px 0; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 34px 0; }
+  blockquote { margin: 18px 0; padding: 12px 18px; background: var(--brand-soft);
+    border-left: 3px solid var(--brand); border-radius: 0 10px 10px 0; color: var(--ink); }
+  blockquote p { margin: 0; }
+  code { font-family: var(--mono); font-size: .9em; background: var(--code-bg);
+    padding: 2px 6px; border-radius: 5px; border: 1px solid var(--line); }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 20px; overflow-x: auto; margin: 18px 0; line-height: 1.7; }
+  pre code { background: none; border: none; padding: 0; font-size: 12.5px; }
+  .table-wrap { overflow-x: auto; margin: 18px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { border: 1px solid var(--line); padding: 9px 13px; text-align: left;
+    vertical-align: top; line-height: 1.65; }
+  th { background: var(--brand-soft); font-weight: 700; white-space: nowrap; }
+  tbody tr:nth-child(even) { background: rgba(22, 119, 255, .035); }
+  .foot { text-align: center; color: var(--muted); font-size: 12.5px; padding: 0 26px 40px; }
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; padding: 18px 14px 60px; gap: 14px; }
+    .toc { position: static; width: 100%; max-height: 190px; border: 1px solid var(--line);
+      border-radius: 10px; background: var(--surface); padding: 12px; }
+    main { padding: 24px 20px 44px; }
+    h1 { font-size: 22px; } h2 { font-size: 19px; }
+    .meta { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">接口回归 <span>·</span> 项目文档</div>
+  <div class="tabs">
+    <button class="tab active" data-doc="tech">技术文档</button>
+    <button class="tab" data-doc="blog">博客文章</button>
+  </div>
+  <div class="meta">v1.0 · 2026-11-17 · pytest 9 · requests · 35 cases</div>
+</div>
+<div class="layout">
+  <aside class="toc">
+    <div class="toc-title">目录</div>
+    <div class="toc-group active" data-group="tech"><a class="toc-link" href="#sec-1" data-target="sec-1">0. 一分钟先读懂骨架</a>
+<a class="toc-link" href="#sec-2" data-target="sec-2">1. 交付清单</a>
+<a class="toc-link" href="#sec-3" data-target="sec-3">2. 专有名词，先用白话记住</a>
+<a class="toc-link" href="#sec-4" data-target="sec-4">3. 从外向内：一次回归的完整往返</a>
+<a class="toc-link" href="#sec-5" data-target="sec-5">4. 三层架构各自负责什么</a>
+<a class="toc-link" href="#sec-6" data-target="sec-6">5. 靶子：5 张表与 15 个接口</a>
+<a class="toc-link" href="#sec-7" data-target="sec-7">6. 统一响应契约</a>
+<a class="toc-link" href="#sec-8" data-target="sec-8">7. 6 个可开关的缺陷位</a>
+<a class="toc-link" href="#sec-9" data-target="sec-9">8. 35 条用例怎么分组</a>
+<a class="toc-link" href="#sec-10" data-target="sec-10">9. fixture：登录态与数据隔离</a>
+<a class="toc-link" href="#sec-11" data-target="sec-11">10. 请求证据与 Allure 附件</a>
+<a class="toc-link" href="#sec-12" data-target="sec-12">11. 四类报告产物</a>
+<a class="toc-link" href="#sec-13" data-target="sec-13">12. 缺陷单模板逐字段解释</a>
+<a class="toc-link" href="#sec-14" data-target="sec-14">13. 回归闭环：从 6 个红到全绿</a>
+<a class="toc-link" href="#sec-15" data-target="sec-15">14. 几个关键实现细节</a>
+<a class="toc-link" href="#sec-16" data-target="sec-16">15. 踩坑复盘（这一轮真实遇到的）</a>
+<a class="toc-link" href="#sec-17" data-target="sec-17">16. 自己复现与扩展</a>
+<a class="toc-link" href="#sec-18" data-target="sec-18">17. 术语速查与简历可写要点</a></div>
+    <div class="toc-group" data-group="blog"><a class="toc-link" href="#sec-1" data-target="sec-1">一、先得有个「被考的人」</a>
+<a class="toc-link" href="#sec-2" data-target="sec-2">二、那一晚上的 22 个假失败</a>
+<a class="toc-link" href="#sec-3" data-target="sec-3">三、把「挑刺」变成可交付的东西</a>
+<a class="toc-link" href="#sec-4" data-target="sec-4">四、最爽的一刻：从 6 个红到全绿</a>
+<a class="toc-link" href="#sec-5" data-target="sec-5">五、一个和代码无关的小插曲</a>
+<a class="toc-link" href="#sec-6" data-target="sec-6">六、我实际学到了什么</a>
+<a class="toc-link" href="#sec-7" data-target="sec-7">七、下一步</a></div>
+  </aside>
+  <main>
+    <article id="doc-tech" class="active"><h1>H5 商城接口回归与缺陷单 · 技术文档</h1>
+<blockquote>v1.0 · 2026-11-17 · pytest 9 / requests 2 / allure-pytest 2 / Django 5.2<br>35 条接口用例 · 6 条规范化缺陷单 · 一轮回归约 8~15 秒</blockquote>
+<hr>
+<span class="anchor" id="0-一分钟先读懂骨架"></span>
+<h2 id="sec-1">0. 一分钟先读懂骨架</h2>
+<p>前三个项目我们都在<strong>写功能</strong>：商城能下单、通知能消费、文件能秒传。这个项目换了个角色——<strong>写一个专门挑刺的自动检查员</strong>。</p>
+<p>用一句话说完整件事：</p>
+<blockquote>先准备一个小型 H5 商城接口当「靶子」（故意留 6 个 bug），再用 pytest 按 35 条清单逐条调用接口、比对返回结果，把不对的地方自动整理成 6 张缺陷单，最后出一份能双击打开的测试报告；把 6 个 bug 修掉后，同一套清单一跑就全绿。</blockquote>
+<p>由外向内分三层，先记住这张图，后面每节都是往里拆一层：</p>
+<div class="table-wrap"><table><thead><tr><th>层次</th><th>谁在干活</th><th>白话比喻</th><th>主要文件</th></tr></thead><tbody><tr><td>第一层 · 看板</td><td>浏览器页面 + Django 视图</td><td>仪表盘，按钮一按就开始考试</td><td><code>templates/console.html</code>、<code>static/app.js</code>、<code>mall/views.py</code></td></tr><tr><td>第二层 · 检查员</td><td>pytest + requests + Allure</td><td>监考、阅卷、留证据、写成绩单</td><td><code>tests/</code>、<code>run_regression.py</code>、<code>reports/</code></td></tr><tr><td>第三层 · 靶子</td><td>内置 H5 商城 JSON 接口</td><td>被考的学生，身上有 6 个已知错题</td><td><code>mall/service.py</code>、<code>mall/urls.py</code>、<code>mall/models.py</code></td></tr></tbody></table></div>
+<p>一个很容易搞混的点：<strong>这次「失败」是产出，不是事故</strong>。6 条用例变红，正说明检查员把 6 个缺陷抓出来了；如果全绿反而说明靶子没犯错、没东西可报。</p>
+<hr>
+<span class="anchor" id="1-交付清单"></span>
+<h2 id="sec-2">1. 交付清单</h2>
+<div class="table-wrap"><table><thead><tr><th>类别</th><th>文件</th><th>作用</th></tr></thead><tbody><tr><td>一键回归</td><td><code>run_regression.py</code></td><td>跑 pytest → 汇总 → 出报告 → 更新看板</td></tr><tr><td>被测服务</td><td><code>config/</code>、<code>mall/</code></td><td>Django 项目，15 个商城接口 + 5 张表 + 6 个缺陷开关</td></tr><tr><td>测试套件</td><td><code>tests/conftest.py</code>、<code>tests/client.py</code>、<code>tests/test_01~07_*.py</code></td><td>夹具、请求封装、35 条用例</td></tr><tr><td>缺陷数据</td><td><code>defect_catalog.py</code></td><td>6 条缺陷单的结构化数据，看板和报告共用</td></tr><tr><td>报告产物</td><td><code>reports/report.html</code>、<code>reports/defects.md</code></td><td>免 Java 单页报告 + Markdown 缺陷单（随仓库保留样例）</td></tr><tr><td>报告脚本</td><td><code>reports/build_report.py</code>、<code>reports/defect_reports.py</code></td><td>把结果渲染成上面两份交付物</td></tr><tr><td>看板</td><td><code>templates/</code>、<code>static/app.js</code></td><td>统计卡、用例清单、缺陷开关、缺陷单、请求流水</td></tr><tr><td>文档</td><td><code>docs/technical-doc.md</code>、<code>docs/blog-post.md</code>、<code>docs/reader.html</code></td><td>技术文档、博客、离线双 Tab 阅读版</td></tr></tbody></table></div>
+<p>代码规模约 2,500 行，其中测试与报告相关约 1,000 行。运行期数据（<code>runtime/</code>、数据库、<code>allure-results/</code>、JUnit XML）都不入库，只提交源码、文档与报告样例。</p>
+<hr>
+<span class="anchor" id="2-专有名词先用白话记住"></span>
+<h2 id="sec-3">2. 专有名词，先用白话记住</h2>
+<div class="table-wrap"><table><thead><tr><th>名词</th><th>白话解释</th><th>在本项目里对应什么</th></tr></thead><tbody><tr><td>SUT（被测系统）</td><td>被考试的对象</td><td>内置 H5 商城接口</td></tr><tr><td>接口 / API</td><td>网址 + 方法 + 参数，返回 JSON</td><td><code>/api/products/?page=1</code></td></tr><tr><td>pytest</td><td>测试调度员：按清单跑、统计通过失败</td><td><code>python -m pytest</code></td></tr><tr><td>用例（case）</td><td>一条检查项：发什么请求、期望什么结果</td><td><code>test_login_wrong_password_rejected</code></td></tr><tr><td>断言（assert）</td><td>「我认为应该是这样」，不对就判失败</td><td><code>assert resp.status_code == 401</code></td></tr><tr><td>fixture（夹具）</td><td>用例开跑前自动准备好的东西</td><td>已登录的客户端、干净的数据库</td></tr><tr><td>hook（钩子）</td><td>框架留的插口，在特定时刻插一段自己的逻辑</td><td>用例跑完收请求响应证据</td></tr><tr><td>requests</td><td>用代码模拟手机发 HTTP 请求</td><td><code>ApiClient</code></td></tr><tr><td>token</td><td>登录凭证，之后每个请求带上它</td><td><code>X-Token</code> 请求头</td></tr><tr><td>Allure</td><td>把测试结果变成可视化报告的框架</td><td><code>allure-results/</code> + 单页报告</td></tr><tr><td>JUnit XML</td><td>测试结果的通用交换格式，CI 都认</td><td><code>reports/junit.xml</code></td></tr><tr><td>回归测试</td><td>代码改完后，用同一套清单再考一次</td><td>修复后从 29/6 变 35/0</td></tr><tr><td>缺陷单</td><td>把一个 bug 写清楚：怎么复现、应该怎样、实际怎样</td><td><code>DEF-001</code> ~ <code>DEF-006</code></td></tr><tr><td>幂等</td><td>同一个操作做多次，结果和做一次一样</td><td>重复添加购物车 / 重复支付</td></tr><tr><td>契约</td><td>所有接口都遵守的统一格式</td><td><code>{code, message, data}</code></td></tr><tr><td>严重级</td><td>缺陷有多要命</td><td>P0 致命 / P1 严重 / P2 一般</td></tr></tbody></table></div>
+<hr>
+<span class="anchor" id="3-从外向内一次回归的完整往返"></span>
+<h2 id="sec-4">3. 从外向内：一次回归的完整往返</h2>
+<p>点一下看板上的「一键跑回归」，背后是这样一圈：</p>
+<ol><li>浏览器 <code>POST /api/run/</code>（Django 视图 <code>api_run</code>）。</li><li>视图起一个后台线程，避免把网页请求卡住；同时把 <code>runtime/run_status.json</code> 标成 <code>running=true</code>。</li><li>线程执行 <code>python run_regression.py --reuse-server</code>。</li><li>脚本调用 <code>pytest</code>，pytest 通过 <code>conftest.py</code> 的 session 夹具探活：<code>MALL_BASE_URL</code>（默认 <code>127.0.0.1:8002</code>）能连通就复用，没有就临时拉起一个服务，跑完关掉。</li><li>每条用例前，autouse 夹具调 <code>POST /api/admin/reset/</code> 把商城恢复成干净种子数据——<strong>用例之间不许互相污染</strong>。</li><li><code>ApiClient</code> 用 requests 发请求，自动带 token，并记录每一次请求与响应。</li><li>断言通过/失败；失败时 hook 把证据挂成 Allure 附件，并写进 <code>results.json</code>。</li><li>35 条跑完，<code>run_regression.py</code> 汇总成 <code>last_run.json</code>，再生成 <code>report.html</code> 与 <code>defects.md</code>。</li><li>看板前端每 2 秒轮询 <code>/api/state/</code>，读到 <code>running=false</code> 就刷新统计卡、用例清单和缺陷单。</li></ol>
+<p>这圈里最值得记住的是 <strong>第 5 步和第 8 步</strong>：前者保证结果可复现，后者保证结果可交付。</p>
+<hr>
+<span class="anchor" id="4-三层架构各自负责什么"></span>
+<h2 id="sec-5">4. 三层架构各自负责什么</h2>
+<div class="table-wrap"><table><thead><tr><th>层</th><th>输入</th><th>输出</th><th>关键约束</th></tr></thead><tbody><tr><td>看板层</td><td>用户点击 / 轮询</td><td>统计、清单、开关、报告链接</td><td>只读运行期 JSON，不参与测试判断</td></tr><tr><td>测试层</td><td>用例清单 + 靶子地址</td><td>每条用例的通过/失败 + 证据</td><td>用例只描述「正确行为」，不看缺陷开关</td></tr><tr><td>靶子层</td><td>HTTP 请求</td><td>统一 JSON 响应</td><td>6 个开关决定「犯错」还是「正确」</td></tr></tbody></table></div>
+<p>这个分层有一个刻意的设计：<strong>用例永远写「应该怎样」，开关只改变靶子行为</strong>。所以同一套 35 条用例，开关打开时 29 通过 / 6 失败，关掉后 35 通过 / 0 失败，用例本身一个字都不用改。这就是回归测试的价值——用不变的清单反复验证修改。</p>
+<hr>
+<span class="anchor" id="5-靶子5-张表与-15-个接口"></span>
+<h2 id="sec-6">5. 靶子：5 张表与 15 个接口</h2>
+<p>数据库用 SQLite，5 张表：</p>
+<div class="table-wrap"><table><thead><tr><th>表</th><th>存什么</th><th>为什么要它</th></tr></thead><tbody><tr><td><code>MallUser</code></td><td>账号、密码、昵称、token</td><td>登录态与越权校验</td></tr><tr><td><code>Product</code></td><td>名称、价格（分）、库存、类目、上下架状态</td><td>商品、搜索、库存缺陷</td></tr><tr><td><code>CartItem</code></td><td>用户、商品、数量</td><td>暴露重复添加未累加的缺陷</td></tr><tr><td><code>MallOrder</code></td><td>订单号、商品、数量、金额、状态、<code>paid_count</code></td><td>暴露超卖与重复支付</td></tr><tr><td><code>ApiCallLog</code></td><td>方法、路径、状态码、耗时、时间</td><td>看板右侧「接口请求流水」</td></tr></tbody></table></div>
+<p>金额统一用「分」存整数，是接口测试里常查的一个点：浮点会有精度误差，金额不能这么做。</p>
+<p>15 个商城接口：</p>
+<div class="table-wrap"><table><thead><tr><th>模块</th><th>接口</th></tr></thead><tbody><tr><td>健康 / 管理</td><td><code>GET /api/health/</code>、<code>POST /api/admin/reset/</code></td></tr><tr><td>认证</td><td><code>POST /api/auth/login/</code>、<code>POST /api/auth/logout/</code>、<code>GET /api/auth/profile/</code></td></tr><tr><td>商品</td><td><code>GET /api/products/</code>、<code>GET /api/products/search/</code>、<code>GET /api/products/&lt;id&gt;/</code></td></tr><tr><td>购物车</td><td><code>GET /api/cart/</code>、<code>POST /api/cart/items/</code>、<code>DELETE /api/cart/items/&lt;id&gt;/</code></td></tr><tr><td>订单 / 支付</td><td>`GET</td><td>POST /api/orders/<code>、</code>GET /api/orders/&lt;id&gt;/<code>、</code>POST /api/orders/&lt;id&gt;/pay/<code>、</code>POST /api/orders/&lt;id&gt;/cancel/`</td></tr></tbody></table></div>
+<p>另外 5 个是看板自己的接口（<code>GET /</code>、<code>GET /report/</code>、<code>GET /api/state/</code>、<code>POST /api/toggle/</code>、<code>POST /api/run/</code>）。</p>
+<p><strong>和项目 1 的关系</strong>：两周计划里写的是「依赖项目 1」，但项目 1 是页面型站点（表单 + 模板），并没有 REST JSON 接口。为了让这套回归能独立复现，本仓库内置了一份<strong>同源业务契约</strong>的轻量靶子（用户 / 商品 / 搜索 / 购物车 / 订单 / 支付）。以后项目 1 若加上 API，只要把环境变量 <code>MALL_BASE_URL</code> 指过去，用例在契约一致的前提下不用改写。</p>
+<hr>
+<span class="anchor" id="6-统一响应契约"></span>
+<h2 id="sec-7">6. 统一响应契约</h2>
+<p>所有接口，不管成功失败，都返回同一个外壳：</p>
+<pre><code>{ &quot;code&quot;: 0, &quot;message&quot;: &quot;ok&quot;, &quot;data&quot;: { &quot;...&quot;: &quot;...&quot; } }</code></pre>
+<p>失败时 <code>code</code> 等于 HTTP 状态码、<code>data</code> 为 <code>null</code>：</p>
+<pre><code>{ &quot;code&quot;: 401, &quot;message&quot;: &quot;账号或密码错误&quot;, &quot;data&quot;: null }</code></pre>
+<p><code>test_unified_response_contract</code> 一次检查 4 类响应（成功、参数错误、鉴权失败、业务成功），逐条确认三个字段齐全、<code>code</code> 与 HTTP 状态自洽。这类用例不测业务，测的是<strong>所有接口都守规矩</strong>，是接口回归里性价比最高的一类。</p>
+<hr>
+<span class="anchor" id="7-6-个可开关的缺陷位"></span>
+<h2 id="sec-8">7. 6 个可开关的缺陷位</h2>
+<p>开关状态写在 <code>runtime/bug_flags.json</code>，Django 每次请求重新读，改完立刻生效。看板上可以直接逐个拨，也可以一键全开 / 全关。</p>
+<div class="table-wrap"><table><thead><tr><th>编号</th><th>开关</th><th>缺陷</th><th>级别</th><th>抓它的用例</th></tr></thead><tbody><tr><td>DEF-001</td><td><code>AUTH_BYPASS_WRONG_PASSWORD</code></td><td>错误密码仍签发 token</td><td>P0</td><td><code>test_login_wrong_password_rejected</code></td></tr><tr><td>DEF-002</td><td><code>PAGE_OUT_OF_RANGE_500</code></td><td>页码越界返回 500</td><td>P1</td><td><code>test_product_list_page_out_of_range_empty</code></td></tr><tr><td>DEF-003</td><td><code>SEARCH_INCLUDE_OFF_SHELF</code></td><td>搜索混入已下架商品</td><td>P1</td><td><code>test_search_excludes_off_shelf</code></td></tr><tr><td>DEF-004</td><td><code>CART_DUPLICATE_ROW</code></td><td>重复添加生成重复行</td><td>P1</td><td><code>test_cart_add_same_item_accumulates</code></td></tr><tr><td>DEF-005</td><td><code>ORDER_IGNORE_STOCK</code></td><td>不校验库存造成超卖</td><td>P0</td><td><code>test_order_reject_when_stock_insufficient</code></td></tr><tr><td>DEF-006</td><td><code>PAY_NOT_IDEMPOTENT</code></td><td>重复支付不拦截</td><td>P0</td><td><code>test_pay_duplicate_rejected</code></td></tr></tbody></table></div>
+<p>为什么不真的把代码写坏？因为真实项目里缺陷是「开发改出来的」，测试人员不会去改生产代码。用开关模拟，可以在同一个仓库里反复演示「发现 → 提单 → 修复 → 回归」，也不会把仓库弄脏。</p>
+<hr>
+<span class="anchor" id="8-35-条用例怎么分组"></span>
+<h2 id="sec-9">8. 35 条用例怎么分组</h2>
+<div class="table-wrap"><table><thead><tr><th>模块</th><th>文件</th><th>条数</th><th>主要检查点</th></tr></thead><tbody><tr><td>01 健康检查与认证</td><td><code>test_01_health_auth.py</code></td><td>6</td><td>探活、登录、错误密码、必填字段、token 鉴权</td></tr><tr><td>02 商品列表与详情</td><td><code>test_02_products.py</code></td><td>6</td><td>字段与类型、分页不重复、越界、类目筛选、404</td></tr><tr><td>03 商品搜索</td><td><code>test_03_search.py</code></td><td>5</td><td>命中、大小写、空结果、下架过滤、特殊字符</td></tr><tr><td>04 购物车</td><td><code>test_04_cart.py</code></td><td>6</td><td>添加、幂等累加、金额合计、删除、401、参数校验</td></tr><tr><td>05 订单</td><td><code>test_05_orders.py</code></td><td>6</td><td>创建、库存、金额计算、详情、取消、401</td></tr><tr><td>06 支付与越权</td><td><code>test_06_pay.py</code></td><td>4</td><td>支付、重复支付、状态流转、他人订单 403</td></tr><tr><td>07 契约与性能</td><td><code>test_07_contract.py</code></td><td>2</td><td>统一响应契约、接口耗时基线</td></tr><tr><td><strong>合计</strong></td><td></td><td><strong>35</strong></td><td>其中 6 条对应缺陷单</td></tr></tbody></table></div>
+<p>分组按<strong>业务模块</strong>而不是按技术层，是为了报告出来时，产品、后端、测试都能看懂哪块出了问题。</p>
+<hr>
+<span class="anchor" id="9-fixture登录态与数据隔离"></span>
+<h2 id="sec-10">9. fixture：登录态与数据隔离</h2>
+<p><code>tests/conftest.py</code> 里四个夹具把重复劳动收在一处：</p>
+<pre><code>@pytest.fixture(autouse=True)
+def fresh_state(server):
+    requests.post(server + &quot;/api/admin/reset/&quot;, timeout=10)
+    yield
+
+@pytest.fixture
+def logged_in(api):
+    resp, body = api.login(&quot;alice&quot;, &quot;123456&quot;)
+    assert resp.status_code == 200
+    return api</code></pre>
+<ul><li><code>server</code>：session 级，一轮只做一次，负责探活或临时起服务。</li><li><code>fresh_state</code>：<code>autouse=True</code> 表示每条用例自动执行，不用在用例里写。</li><li><code>api</code>：一个干净的请求客户端。</li><li><code>logged_in</code> / <code>bob_client</code>：已登录的客户端，后者用来测越权。</li></ul>
+<p>用例里因此看不到一句登录代码，只写断言。这就是 fixture 的意义：<strong>把「准备」和「判断」分开</strong>。</p>
+<p>另一个细节：用例不硬编码商品主键。<code>reset_demo()</code> 每次重建种子数据，SQLite 自增 id 会变，所以 <code>ApiClient.product_by_name("考研数学真题")</code> 先按名字查回 id 再用。硬编码 id 是接口测试里非常常见的脆点。</p>
+<hr>
+<span class="anchor" id="10-请求证据与-allure-附件"></span>
+<h2 id="sec-11">10. 请求证据与 Allure 附件</h2>
+<p><code>ApiClient</code> 每次请求都记一条：</p>
+<pre><code>self.calls.append({
+    &quot;method&quot;: method, &quot;url&quot;: url,
+    &quot;request&quot;: {&quot;json&quot;: json_body, &quot;params&quot;: params, &quot;token&quot;: ...},
+    &quot;response&quot;: {&quot;status_code&quot;: resp.status_code, &quot;body&quot;: body},
+    &quot;duration_ms&quot;: duration,
+})</code></pre>
+<p><code>conftest.py</code> 的 <code>pytest_runtest_makereport</code> 钩子在每条用例跑完后做两件事：把最近 10 次请求响应挂成 Allure 的 JSON 附件；把用例的模块、耗时、状态、缺陷编号、失败信息、最后两次请求写成结构化结果。</p>
+<p>于是缺陷单里的「证据」不是手写的描述，而是<strong>真的从这一轮请求里截下来的响应</strong>。例如 DEF-006 的证据就是第二次支付返回 <code>paid_count: 2</code> 的那段 JSON。</p>
+<hr>
+<span class="anchor" id="11-四类报告产物"></span>
+<h2 id="sec-12">11. 四类报告产物</h2>
+<div class="table-wrap"><table><thead><tr><th>产物</th><th>给谁看</th><th>说明</th></tr></thead><tbody><tr><td><code>reports/junit.xml</code></td><td>CI / 流水线</td><td>通用格式，Jenkins、GitHub Actions 都认</td></tr><tr><td><code>reports/allure-results/&lt;批次&gt;/</code></td><td>有 Java 环境的机器</td><td><code>allure serve &lt;目录&gt;</code> 出官方报告</td></tr><tr><td><code>reports/report.html</code></td><td>任何人，双击即开</td><td>自包含单页，统计条、分组用例、失败证据、缺陷单</td></tr><tr><td><code>reports/defects.md</code></td><td>开发 / 导师</td><td>6 条规范化缺陷单，可贴到 issue 或邮件</td></tr></tbody></table></div>
+<p>本机没有 Java，也没有 <code>allure</code> 命令行，所以额外写了 <code>build_report.py</code>：读 <code>results.json</code> + <code>last_run.json</code> + <code>defect_catalog.py</code>，用纯标准库渲染一份 Allure 风格单页。官方 <code>allure-results</code> 仍然保留，换台机器就能看官方版。</p>
+<p>每轮 Allure 结果写进<strong>带时间戳的批次子目录</strong>，既不删除历史结果，也不会把多轮数据混在一起。</p>
+<hr>
+<span class="anchor" id="12-缺陷单模板逐字段解释"></span>
+<h2 id="sec-13">12. 缺陷单模板逐字段解释</h2>
+<p>以 <code>DEF-001</code> 为例，一条规范缺陷单包含：</p>
+<div class="table-wrap"><table><thead><tr><th>字段</th><th>内容示例</th><th>为什么必须有</th></tr></thead><tbody><tr><td>编号 / 标题</td><td><code>DEF-001</code> 错误密码仍可登录并签发 token</td><td>唯一可追踪</td></tr><tr><td>严重级 / 模块</td><td>P0 致命 / 认证</td><td>决定修复优先级与分派对象</td></tr><tr><td>接口</td><td><code>POST /api/auth/login/</code></td><td>定位范围</td></tr><tr><td>前置条件</td><td>存在账号 alice / 123456，缺陷开关打开</td><td>别人能复现的前提</td></tr><tr><td>复现步骤</td><td>1. 用错误密码登录 2. 看状态码与响应体</td><td>一步一步照做就能重现</td></tr><tr><td>预期结果</td><td>HTTP 401，不返回 token</td><td>判断对错的依据</td></tr><tr><td>实际结果</td><td>HTTP 200，返回有效 token</td><td>现在真实发生了什么</td></tr><tr><td>证据</td><td>用该 token 能访问 profile 返回 200</td><td>不是口头描述</td></tr><tr><td>根因推测</td><td>漏掉密码比对，只判断用户是否存在</td><td>帮开发少走弯路</td></tr><tr><td>修复建议</td><td>补全校验，失败统一 401 且补一条越权用例</td><td>可执行的下一步</td></tr><tr><td>关联用例</td><td><code>test_01_health_auth.py::test_login_wrong_password_rejected</code></td><td>修复后跑哪条验证</td></tr></tbody></table></div>
+<p><code>reports/defect_reports.py</code> 会把 6 条数据渲染成 Markdown，<code>build_report.py</code> 和看板则从同一份 <code>defect_catalog.py</code> 读取——<strong>一处定义、三处展示</strong>，不会出现报告里写 P1、看板上写 P2 的情况。</p>
+<hr>
+<span class="anchor" id="13-回归闭环从-6-个红到全绿"></span>
+<h2 id="sec-14">13. 回归闭环：从 6 个红到全绿</h2>
+<p>同一套 35 条用例，两种状态：</p>
+<div class="table-wrap"><table><thead><tr><th>状态</th><th>缺陷开关</th><th>通过</th><th>失败</th><th>通过率</th><th>说明</th></tr></thead><tbody><tr><td>注入缺陷</td><td>6 / 6</td><td>29</td><td>6</td><td>82.9%</td><td>6 条失败正好对应 6 张缺陷单</td></tr><tr><td>模拟修复</td><td>0 / 6</td><td>35</td><td>0</td><td>100%</td><td>清单不变，缺陷全部收敛</td></tr></tbody></table></div>
+<p>操作步骤（看板上点按钮即可）：</p>
+<pre><code># 1) 一键跑回归：29 通过 / 6 失败，报告与缺陷单生成
+python run_regression.py
+
+# 2) 模拟开发修完全部缺陷
+curl -X POST http://127.0.0.1:8002/api/toggle/ \
+     -H &quot;Content-Type: application/json&quot; -d &#x27;{&quot;all&quot;: false}&#x27;
+
+# 3) 同一套用例再跑一次：35 通过 / 0 失败
+python run_regression.py</code></pre>
+<p>这个闭环是整份简历项目里最值得讲的一段：<strong>测试的价值不在于「跑过了」，而在于「修改之后还能证明没把别的地方改坏」</strong>。</p>
+<hr>
+<span class="anchor" id="14-几个关键实现细节"></span>
+<h2 id="sec-15">14. 几个关键实现细节</h2>
+<ul><li><strong>条件更新防超卖</strong>：正确实现用 <code>Product.objects.filter(pk=..., stock__gte=qty).update(stock=F("stock") - qty)</code>，受影响行数为 0 就说明库存不足，直接 409。这是数据库层面的原子判断，比「先查再改」安全。</li><li><strong>购物车幂等</strong>：正确实现按 <code>(user, product)</code> 查已有行，用 <code>F("qty") + n</code> 原子累加；缺陷态每次直接 <code>create</code> 新行。</li><li><strong>支付状态机</strong>：正确实现先判断 <code>status == created</code> 才允许支付，否则 409；<code>paid_count</code> 恒为 1。缺陷态不管状态一律 +1。</li><li><strong>URL 顺序</strong>：<code>api/products/search/</code> 必须排在 <code>api/products/&lt;int:pk&gt;/</code> 前面，否则 <code>search</code> 会被当成主键匹配失败——这个坑在项目 1 的路由里也踩过一次。</li><li><strong>鉴权</strong>：API 用自定义 token（<code>X-Token</code> 或 <code>Authorization: Bearer</code>），因此中间件刻意精简，不引入 session / CSRF；看板自身的 POST 也无需 CSRF token。</li><li><strong>调用留痕</strong>：<code>ApiLogMiddleware</code> 记录每个 <code>/api/</code> 请求的状态码与耗时，但跳过 <code>/api/state/</code>、<code>/api/run/</code> 等看板自身接口，避免流水被轮询刷屏。</li><li><strong>后台线程跑回归</strong>：<code>api_run</code> 用 <code>threading.Thread</code> + <code>subprocess.run</code> 执行，状态写文件，前端轮询。这样网页不会卡 15 秒，也不会因为 HTTP 超时中断测试。</li></ul>
+<hr>
+<span class="anchor" id="15-踩坑复盘这一轮真实遇到的"></span>
+<h2 id="sec-16">15. 踩坑复盘（这一轮真实遇到的）</h2>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>现象</th><th>根因</th><th>处理</th></tr></thead><tbody><tr><td>1</td><td>首轮 35 条里 22 条失败，大量 404，但手动 curl 全部 200</td><td>环境有全局 <code>HTTP_PROXY</code>，Python <code>requests</code> 默认走代理，把 <code>127.0.0.1</code> 请求转发出去，拿到的是代理返回的错误页</td><td><code>ApiClient.session.trust_env = False</code>，同时给子进程设 <code>NO_PROXY</code>；curl 验证时统一加 <code>--noproxy '*'</code></td></tr><tr><td>2</td><td>一键脚本清理旧结果目录的操作被拦下</td><td>涉及删除文件</td><td>不做任何删除，改为每轮写独立批次目录 <code>reports/allure-results/&lt;时间戳&gt;/</code></td></tr><tr><td>3</td><td>本机没有 Java / <code>allure</code> 命令行</td><td>官方 Allure 报告依赖 Java</td><td>保留 <code>allure-results</code>，另写纯标准库 <code>build_report.py</code> 出免安装单页报告</td></tr><tr><td>4</td><td>用例里写死 <code>product_id=1</code> 会失效</td><td>每条用例前重置数据，SQLite 自增主键会变</td><td>按名称查 id（<code>product_by_name</code>），不硬编码主键</td></tr><tr><td>5</td><td>用例耗时显示 <code>0.00s</code></td><td>单条用例通常几十毫秒</td><td>看板与报告统一改成毫秒显示</td></tr><tr><td>6</td><td>看板按钮触发的回归若失败，页面可能一直转圈</td><td>子进程异常时没有收尾</td><td><code>_run_worker</code> 用 <code>try/except</code> 保证任何情况都把 <code>running</code> 置回 <code>false</code></td></tr><tr><td>7</td><td>暗色主题下灰色标签浅字看不清</td><td>主题变量没覆盖到 <code>.pill.muted</code></td><td>和前三个项目一样补暗色覆盖规则，并做 500px 手机端截图复核</td></tr></tbody></table></div>
+<p>第 1 条最值得记：<strong>测试环境问题经常被误判成业务缺陷</strong>。先把「请求到底发给了谁」确认清楚，再去看断言。</p>
+<hr>
+<span class="anchor" id="16-自己复现与扩展"></span>
+<h2 id="sec-17">16. 自己复现与扩展</h2>
+<pre><code>pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver 127.0.0.1:8002 --noreload   # 看板 + 靶子
+python run_regression.py                                # 一键回归
+python -m pytest -q                                     # 只跑用例也行（无服务时自动拉起）</code></pre>
+<p>打开 <code>http://127.0.0.1:8002/</code> 看板，<code>http://127.0.0.1:8002/report/</code> 看报告。</p>
+<p>加一条新用例的顺序：在对应模块写 <code>def test_xxx(...)</code> → 用 <code>@pytest.mark.defect("DEF-00X")</code> 标注是否对应缺陷 → 用 <code>logged_in</code> / <code>api</code> 夹具 → 写断言 → 重跑 <code>run_regression.py</code>，看板和报告会自动把新用例纳入统计（数字从 35 变 36 不需要改任何前端代码）。</p>
+<p>要接真实服务：设置 <code>MALL_BASE_URL=http://&lt;host&gt;:&lt;port&gt;</code>，只要对方遵守 <code>{code, message, data}</code> 契约，用例可直接复用。</p>
+<hr>
+<span class="anchor" id="17-术语速查与简历可写要点"></span>
+<h2 id="sec-18">17. 术语速查与简历可写要点</h2>
+<p><strong>术语速查</strong>：SUT 是被测系统、fixture 是夹具、hook 是钩子、assertion 是断言、regression 是回归、idempotency 是幂等、contract 是契约、severity 是严重级、evidence 是证据、artifact 是产物。</p>
+<p>简历里可以据实写的几句话：</p>
+<ul><li>基于 pytest + requests 设计 35 条 H5 商城接口回归用例，覆盖认证、商品、搜索、购物车、订单、支付、契约与性能 7 个模块。</li><li>通过 fixture 统一管理登录态与数据隔离，通过 pytest hook 自动收集请求/响应证据并生成 Allure 附件。</li><li>产出 6 条规范化缺陷单（含复现步骤、预期/实际、根因与修复建议），并用缺陷开关演示「发现 → 修复 → 回归」闭环，修复后用例通过率从 82.9% 升至 100%。</li><li>输出 JUnit XML、Allure 原始结果、免 Java 单页报告与可视化看板，支持一键回归。</li></ul>
+<hr>
+<p><em>文档随代码存于 <code>docs/</code>，<code>docs/reader.html</code> 为离线双 Tab 阅读版，双击即可打开。</em></p></article>
+    <article id="doc-blog"><h1>这次我不写功能了，我写了一个专门挑刺的机器人</h1>
+<blockquote>项目 4 手记 · 2026-11-17 · pytest / requests / Allure / Django</blockquote>
+<p>前三个项目，我一直在做「加法」：给二手交易平台加下单、给订单通知加幂等、给大文件上传加秒传。每次交付的时候，我都会顺手点一遍页面，确认功能没坏。</p>
+<p>但这个「顺手点一遍」一直让我有点心虚。功能是我自己写的，测试也是我自己点的，等于自己给自己批卷子。于是第四个项目我换了个方向：<strong>不写业务功能，专门写一个自动检查员</strong>，让它按清单去调接口，把不对的地方一条条记下来。</p>
+<p>做完之后我最想说的不是「35 条用例」，而是这个体会：<strong>测试里变红的那些用例，不是失败，是产出。</strong></p>
+<hr>
+<span class="anchor" id="一先得有个被考的人"></span>
+<h2 id="sec-1">一、先得有个「被考的人」</h2>
+<p>写接口测试第一个尴尬问题是：测谁？</p>
+<p>两周计划里写的是「基于 H5 商城」，也就是项目 1。但我回去翻了项目 1 的代码，发现它是典型的页面型站点：表单提交、模板渲染、跳转重定向，并没有返回 JSON 的 REST API。硬把它改成接口服务，动静太大，而且会把前面已经稳下来的项目再搅一遍。</p>
+<p>所以我做了个折中：在测试仓库里内置一个<strong>轻量靶子</strong>。业务契约和项目 1 完全一致——用户、商品、搜索、购物车、订单、支付，但用纯 JSON 接口暴露出来。这样任何人 clone 这个仓库，不用先启动三个别的项目，一条命令就能把整套回归跑起来。</p>
+<p>回头看，这个决定反而让项目更干净了：<strong>被测系统和测试套件放在一个仓库里，版本是对齐的</strong>。以后项目 1 真加上 API，只要把 <code>MALL_BASE_URL</code> 指过去，用例在契约一致的前提下不用改。</p>
+<p>靶子里我埋了 6 个开关，对应 6 个真实感很强的缺陷：错误密码能登录、分页越界 500、搜索混入下架商品、购物车重复添加不累加、下单不校验库存、重复支付不拦截。开关打开，靶子故意犯错；开关关掉，相当于开发把 bug 修完了。</p>
+<hr>
+<span class="anchor" id="二那一晚上的-22-个假失败"></span>
+<h2 id="sec-2">二、那一晚上的 22 个假失败</h2>
+<p>第一次跑一键回归，终端刷出来 22 条失败。</p>
+<p>我预期的是 6 条。多出来的 16 条几乎全是 404，而且特别诡异：<code>/api/health/</code> 是 200，<code>/api/products/</code> 有时 200 有时 404；同一个 <code>/api/auth/profile/</code>，不带 token 的请求正常返回 401，带上 token 反而 404。</p>
+<p>我第一反应是路由写错了，去翻 <code>urls.py</code>，翻了三遍，没问题。又怀疑是 fixture 重置数据把服务搞坏了，也不对——404 是路由层面的事，跟数据无关。</p>
+<p>真正的转折是我去看服务日志：<strong>pytest 期间的请求，一条都没进到被测服务的日志里。</strong></p>
+<p>那它们去哪了？打印一下环境变量：</p>
+<pre><code>HTTP_PROXY=http://127.0.0.1:54397</code></pre>
+<p>这台机器上有全局代理。Python 的 <code>requests</code> 默认会读环境里的代理配置，把 <code>127.0.0.1</code> 的请求也转发出去；而 <code>curl</code> 直连本地，所以我手动验证时一切正常，一到 pytest 就全乱。代理返回的错误页恰好是个 Django 风格的 404 页面，把我骗了小半个晚上。</p>
+<p>修法只有一行，但很关键：</p>
+<pre><code>self.session.trust_env = False</code></pre>
+<p>让测试客户端不走环境代理，直连本机。再跑，35 条用例变成 <strong>29 通过 / 6 失败</strong>，6 条红正好对应 6 张缺陷单，一个不多一个不少。</p>
+<p>这件事给我留下的经验比任何一条用例都深：<strong>测试环境的问题，经常被误判成业务缺陷</strong>。断言失败时，先确认「这个请求到底发给了谁」，再去看业务逻辑。后来我把这条写进了技术文档的踩坑复盘第一条。</p>
+<hr>
+<span class="anchor" id="三把挑刺变成可交付的东西"></span>
+<h2 id="sec-3">三、把「挑刺」变成可交付的东西</h2>
+<p>检查员不能只会在终端里刷 <code>FAILED</code>。真正能被别人用的，是这四样东西：</p>
+<ul><li><strong>JUnit XML</strong>：CI 流水线都认的通用格式；</li><li><strong>Allure 原始结果</strong>：有 Java 的机器上 <code>allure serve</code> 就能出官方报告；</li><li><strong>免 Java 单页报告</strong>：本机没有 Java，我用纯标准库渲染了一份 <code>report.html</code>，统计条、分组用例、失败断言、请求响应证据、缺陷单全在里面，双击即开；</li><li><strong>6 条规范化缺陷单</strong>：编号、严重级、接口、前置条件、复现步骤、预期结果、实际结果、证据、根因推测、修复建议、关联用例。</li></ul>
+<p>为了让「证据」不是我手写的一段描述，我在 pytest 的 <code>pytest_runtest_makereport</code> 钩子里做了一件事：每条用例跑完，把最近 10 次请求和响应以 JSON 附件的形式挂上去。所以 DEF-006 缺陷单里写的「第二次支付返回 <code>paid_count: 2</code>」，是那一轮真真切切截下来的响应体。</p>
+<p>还有一个小设计我很喜欢：<strong>缺陷数据只定义一次</strong>（<code>defect_catalog.py</code>），看板、单页报告、Markdown 缺陷单三处都从它读。不会出现报告里写 P1、看板上写 P2 这种低级不一致。</p>
+<hr>
+<span class="anchor" id="四最爽的一刻从-6-个红到全绿"></span>
+<h2 id="sec-4">四、最爽的一刻：从 6 个红到全绿</h2>
+<p>看板上有个按钮叫「模拟开发修完全部缺陷」。点下去，6 个开关全关；再点「一键跑回归」，同一套 35 条用例，一个字都没改：</p>
+<div class="table-wrap"><table><thead><tr><th></th><th>缺陷开关</th><th>通过</th><th>失败</th><th>通过率</th></tr></thead><tbody><tr><td>修复前</td><td>6 / 6</td><td>29</td><td>6</td><td>82.9%</td></tr><tr><td>修复后</td><td>0 / 6</td><td>35</td><td>0</td><td>100%</td></tr></tbody></table></div>
+<p>我盯着那个 100% 看了几秒。前三个项目交付时，我的满足感来自「页面能用了」；这次的满足感来自「我能证明它没问题了」。这两件事其实很不一样。</p>
+<p>以前我以为回归测试就是「改完再跑一遍」，现在更愿意这样理解它：<strong>用一份不变的清单，反复证明这次修改没有把别的地方弄坏</strong>。清单越稳定，这句话越有分量。</p>
+<hr>
+<span class="anchor" id="五一个和代码无关的小插曲"></span>
+<h2 id="sec-5">五、一个和代码无关的小插曲</h2>
+<p>一键脚本原本有一句「跑之前清空上一轮 Allure 结果目录」。执行的时候，这一步被环境拦下来了——它涉及删除文件。</p>
+<p>我当时的选择是：不较劲，也不换个别的方式偷偷删掉，直接改设计。<strong>每轮结果写进带时间戳的批次子目录</strong>，旧的原样留着，新的单独放。改完反而更好：既能对比不同批次，也不会误删任何东西。</p>
+<p>后来越想越觉得这个改动挺有意思。做测试的人天天在讲「不要破坏现场」，结果自己的脚本第一个想干的事就是清现场。留痕比干净更重要。</p>
+<hr>
+<span class="anchor" id="六我实际学到了什么"></span>
+<h2 id="sec-6">六、我实际学到了什么</h2>
+<p>不列知识点，说三个真的进到脑子里的东西：</p>
+<ol><li><strong>夹具（fixture）是「把准备和判断分开」</strong>。我把重置数据、起服务、登录拿 token 全放进 <code>conftest.py</code>，35 条用例里看不到一句登录代码，只写断言。读用例的时候，一眼就知道它在检查什么。</li><li><strong>断言要写「应该怎样」，不能写「现在怎样」</strong>。我一开始差点让用例去读缺陷开关、根据开关决定期望值，那样就等于让考卷跟着学生答案改。开关只改靶子，用例永远写正确行为，回归才有意义。</li><li><strong>用例不硬编码主键</strong>。每条用例前重置种子数据，SQLite 自增 id 会变，所以改成按商品名查 id。这类「脆点」不痛一次是记不住的。</li></ol>
+<p>另外还有个很实际的收获：我现在能说清 pytest / fixture / hook / Allure / JUnit XML / 契约 / 幂等 / 严重级这些词分别是干什么的，而不是只在简历上见过它们。</p>
+<hr>
+<span class="anchor" id="七下一步"></span>
+<h2 id="sec-7">七、下一步</h2>
+<p>四个项目连起来，简历上的形状开始清楚了：一个完整的业务系统，两个后端硬核点（幂等消费、分片上传），再加一个测试方向的收口。剩下的项目里还有 Java 方向和文档方向，不急，一个一个来。</p>
+<p>如果你也想照着做一遍，最省事的路径是：先点一遍看板的「一键跑回归」，对着「事件流水」倒推每一步；再打开 <code>report.html</code> 看 6 张缺陷卡；最后把 6 个开关关掉重跑一次，看它全绿。代码可以先不读，流程走通了再回头看 <code>tests/</code> 目录，会觉得顺很多。</p>
+<blockquote>相关代码与文档：<code>docs/technical-doc.md</code>、<code>docs/reader.html</code>、<code>reports/report.html</code>、<code>reports/defects.md</code>。</blockquote></article>
+  </main>
+</div>
+<div class="foot">H5 商城接口回归与缺陷单　|　文档随代码存于 docs/ 目录，离线可读</div>
+<script>
+(function () {
+  var tabs = document.querySelectorAll('.tab');
+  var articles = document.querySelectorAll('article');
+  var groups = document.querySelectorAll('.toc-group');
+  function switchTo(name) {
+    tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.doc === name); });
+    articles.forEach(function (a) { a.classList.toggle('active', a.id === 'doc-' + name); });
+    groups.forEach(function (g) { g.classList.toggle('active', g.dataset.group === name); });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try { localStorage.setItem('xj-doc-tab', name); } catch (e) {}
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { switchTo(t.dataset.doc); }); });
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest('.toc-link');
+    if (!link) return;
+    e.preventDefault();
+    var target = document.getElementById(link.dataset.target);
+    if (!target) return;
+    var y = target.getBoundingClientRect().top + window.pageYOffset - 84;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+    groups.forEach(function (g) {
+      g.querySelectorAll('.toc-link').forEach(function (l) { l.classList.remove('active'); });
+    });
+    link.classList.add('active');
+  });
+  try {
+    var saved = localStorage.getItem('xj-doc-tab');
+    if (saved === 'blog') { switchTo('blog'); }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

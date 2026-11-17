@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H5 商城接口回归报告</title>
+<style>
+  :root { --bg:#f4f7fc; --surface:#fff; --ink:#16243c; --muted:#64748b; --line:#e2e9f3;
+    --brand:#1677ff; --brand-soft:#eaf3ff; --green:#0f9d6e; --green-soft:#e6f7f0;
+    --red:#d5443b; --red-soft:#fdeceb; --amber:#b26a00; --amber-soft:#fff4e0;
+    --purple:#7048c8; --purple-soft:#f1ecff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.7 -apple-system,
+    BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+  .page { max-width:1100px; margin:0 auto; padding:24px 18px 60px; }
+  .hero { background:linear-gradient(115deg,#1677ff,#4d9bff 58%,#75b6ff); color:#fff;
+    border-radius:16px; padding:26px 30px; margin-bottom:18px; }
+  .hero .eyebrow { font-size:11.5px; letter-spacing:1.4px; background:rgba(255,255,255,.18);
+    padding:3px 11px; border-radius:99px; }
+  .hero h1 { font-size:25px; margin:12px 0 6px; font-weight:600; }
+  .hero p { margin:0; font-size:13px; opacity:.92; }
+  section { margin-bottom:20px; }
+  h2 { font-size:16px; margin:0 0 12px; }
+  h2 .sub { font-size:12px; color:var(--muted); font-weight:400; margin-left:8px; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+  .stats { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
+  .stat { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:13px 15px; }
+  .stat .n { font-size:23px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .stat .l { font-size:12px; color:var(--muted); }
+  .stat.ok .n { color:var(--green); } .stat.bad .n { color:var(--red); }
+  .stat.hl .n { color:var(--brand); } .stat.warn .n { color:var(--amber); }
+  .bar { height:10px; border-radius:99px; overflow:hidden; background:#e8eef8; display:flex; margin:14px 0 4px; }
+  .bar i.ok { background:var(--green); } .bar i.bad { background:var(--red); }
+  .legend { font-size:12px; color:var(--muted); }
+  table { width:100%; border-collapse:collapse; font-size:12.8px; }
+  th,td { padding:9px 10px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-size:12px; font-weight:500; background:#fafcff; white-space:nowrap; }
+  .pill { display:inline-block; font-size:11.5px; padding:1px 9px; border-radius:99px; white-space:nowrap; }
+  .pill.ok { background:var(--green-soft); color:var(--green); }
+  .pill.bad { background:var(--red-soft); color:var(--red); }
+  .pill.warn { background:var(--amber-soft); color:var(--amber); }
+  .pill.dup { background:var(--purple-soft); color:var(--purple); }
+  .pill.muted { background:#f0f3f8; color:var(--muted); }
+  .group { font-size:12.5px; color:var(--muted); padding:14px 10px 6px; font-weight:600; }
+  tr.fail td { background:rgba(213,68,59,.045); }
+  .mono { font-family:"SFMono-Regular",Consolas,Menlo,monospace; font-size:11.6px; }
+  .nodeid { color:var(--muted); font-size:11px; }
+  details { margin-top:6px; }
+  summary { cursor:pointer; color:var(--brand); font-size:12px; }
+  pre { background:#f6f9fd; border:1px solid var(--line); border-radius:8px; padding:11px;
+    overflow-x:auto; font-size:11.5px; line-height:1.55; white-space:pre-wrap; word-break:break-all; }
+  .defects { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  .defect { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:15px 17px; }
+  .defect.found { border-color:#f3c7c4; }
+  .defect h3 { font-size:13.6px; margin:8px 0; }
+  .defect dl { margin:0; font-size:12.2px; }
+  .defect dt { color:var(--muted); font-size:11.5px; margin-top:7px; }
+  .defect dd { margin:2px 0 0; overflow-wrap:anywhere; }
+  .defect ol { padding-left:18px; margin:2px 0 0; }
+  .foot { text-align:center; color:var(--muted); font-size:12px; margin-top:26px; }
+  a { color:var(--brand); }
+  @media (max-width:860px) { .stats{grid-template-columns:repeat(3,1fr)} .defects{grid-template-columns:1fr}
+    .card{padding:14px} .hero{padding:20px 18px} }
+  @media (prefers-color-scheme:dark) {
+    :root { --bg:#121821; --surface:#1a2330; --ink:#e6edf7; --muted:#98a8bd; --line:#2b3746;
+      --brand:#6aa8ff; --brand-soft:#1e314c; --green:#64d6ab; --green-soft:#1a3a30;
+      --red:#f1948c; --red-soft:#3a2323; --amber:#e9b567; --amber-soft:#3a2e18;
+      --purple:#b9a2f0; --purple-soft:#2c2440; }
+    th,pre { background:#243040; }
+    .pill.muted { background:#243040; color:#9aabc0; }
+    .bar { background:#243040; }
+    tr.fail td { background:rgba(241,148,140,.06); }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hero">
+    <span class="eyebrow">API REGRESSION REPORT</span>
+    <h1>H5 商城接口回归报告</h1>
+    <p>运行时间 2026-11-16 23:43:23　·　pytest + requests + Allure　·　被测服务 http://127.0.0.1:8002</p>
+  </div>
+
+  <section>
+    <h2>执行概览 <span class="sub">35 条用例 / 29 通过 / 6 失败</span></h2>
+    <div class="stats">
+      <div class="stat hl"><div class="n">35</div><div class="l">用例总数</div></div>
+      <div class="stat ok"><div class="n">29</div><div class="l">通过</div></div>
+      <div class="stat bad"><div class="n">6</div><div class="l">失败</div></div>
+      <div class="stat hl"><div class="n">82.9%</div><div class="l">通过率</div></div>
+      <div class="stat warn"><div class="n">6</div><div class="l">关联缺陷单</div></div>
+      <div class="stat"><div class="n">8.4s</div><div class="l">执行耗时</div></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="bar"><i class="ok" style="width:82.9%"></i><i class="bad" style="width:17.1%"></i></div>
+      <div class="legend">绿色 = 通过 29 条　·　红色 = 失败 6 条　·　缺陷开关开启 6/6</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>用例明细 <span class="sub">失败用例可展开断言信息与实际响应证据</span></h2>
+    <table>
+      <thead><tr><th>状态</th><th>用例</th><th>接口</th><th>耗时</th><th>缺陷单</th></tr></thead>
+      <tbody><tr><td colspan="5" class="group">01 健康检查与认证（6 条）</td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_health_ok</b><div class="nodeid">tests/test_01_health_auth.py::test_health_ok</div></td><td class="mono">GET health/</td><td class="mono">44ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_login_success_returns_token</b><div class="nodeid">tests/test_01_health_auth.py::test_login_success_returns_token</div></td><td class="mono">POST auth/login/</td><td class="mono">55ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class="fail"><td><span class="pill bad">失败</span></td><td><b>test_login_wrong_password_rejected</b><details><summary>展开断言失败信息与请求响应证据</summary><pre>api = &lt;tests.client.ApiClient object at 0x00000192EA5DB110&gt;
+
+    @pytest.mark.defect(&quot;DEF-001&quot;)
+    @allure.severity(allure.severity_level.CRITICAL)
+    def test_login_wrong_password_rejected(api):
+        &quot;&quot;&quot;错误密码必须 401，且不签发任何 token（缺陷打开时会被放行）&quot;&quot;&quot;
+        with allure.step(&quot;用错误密码登录，应被拒绝&quot;):
+            resp, body = api.post(&quot;/api/auth/login/&quot;,
+                                  {&quot;username&quot;: &quot;alice&quot;, &quot;password&quot;: &quot;wrong-pwd&quot;})
+&gt;       assert resp.status_code == 401, f&quot;错误密码被放行，存在认证绕过：{body}&quot;
+E       AssertionError: 错误密码被放行，存在认证绕过：{&#x27;code&#x27;: 0, &#x27;message&#x27;: &#x27;登录成功&#x27;, &#x27;data&#x27;: {&#x27;token&#x27;: &#x27;64f004888134e6ce976e8f8b34b1b266&#x27;, &#x27;username&#x27;: &#x27;alice&#x27;, &#x27;nickname&#x27;: &#x27;阿梨&#x27;}}
+E       assert 200 == 401
+E        +  where 200 = &lt;Response [200]&gt;.status_code
+
+tests\test_01_health_auth.py:37: AssertionError</pre><pre>[
+  {
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;url&quot;: &quot;http://127.0.0.1:8002/api/auth/login/&quot;,
+    &quot;request&quot;: {
+      &quot;json&quot;: {
+        &quot;username&quot;: &quot;alice&quot;,
+        &quot;password&quot;: &quot;wrong-pwd&quot;
+      },
+      &quot;params&quot;: null,
+      &quot;token&quot;: false
+    },
+    &quot;response&quot;: {
+      &quot;status_code&quot;: 200,
+      &quot;body&quot;: {
+        &quot;code&quot;: 0,
+        &quot;message&quot;: &quot;登录成功&quot;,
+        &quot;data&quot;: {
+          &quot;token&quot;: &quot;64f004888134e6ce976e8f8b34b1b266&quot;,
+          &quot;username&quot;: &quot;alice&quot;,
+          &quot;nickname&quot;: &quot;阿梨&quot;
+        }
+      }
+    },
+    &quot;duration_ms&quot;: 52.3
+  }
+]</pre></details><div class="nodeid">tests/test_01_health_auth.py::test_login_wrong_password_rejected</div></td><td class="mono">POST auth/login/</td><td class="mono">53ms</td><td><span class="pill dup">DEF-001</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_login_missing_field_400</b><div class="nodeid">tests/test_01_health_auth.py::test_login_missing_field_400</div></td><td class="mono">POST auth/login/</td><td class="mono">41ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_profile_with_token</b><div class="nodeid">tests/test_01_health_auth.py::test_profile_with_token</div></td><td class="mono">GET auth/profile/</td><td class="mono">18ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_profile_without_token_401</b><div class="nodeid">tests/test_01_health_auth.py::test_profile_without_token_401</div></td><td class="mono">GET auth/profile/</td><td class="mono">36ms</td><td><span class="pill muted">—</span></td></tr>
+<tr><td colspan="5" class="group">02 商品列表与详情（6 条）</td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_product_list_shape</b><div class="nodeid">tests/test_02_products.py::test_product_list_shape</div></td><td class="mono">GET products/</td><td class="mono">49ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_product_list_pagination</b><div class="nodeid">tests/test_02_products.py::test_product_list_pagination</div></td><td class="mono">GET products/</td><td class="mono">72ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class="fail"><td><span class="pill bad">失败</span></td><td><b>test_product_list_page_out_of_range_empty</b><details><summary>展开断言失败信息与请求响应证据</summary><pre>api = &lt;tests.client.ApiClient object at 0x00000192EA6F7550&gt;
+
+    @pytest.mark.defect(&quot;DEF-002&quot;)
+    @allure.severity(allure.severity_level.NORMAL)
+    def test_product_list_page_out_of_range_empty(api):
+        &quot;&quot;&quot;页码越界应返回空列表而不是 500（缺陷打开时会 500）&quot;&quot;&quot;
+        with allure.step(&quot;请求远超总页数的页码&quot;):
+            resp, body = api.get(&quot;/api/products/&quot;, params={&quot;page&quot;: 999, &quot;size&quot;: 2})
+&gt;       assert resp.status_code == 200, f&quot;页码越界导致服务端错误：{body}&quot;
+E       AssertionError: 页码越界导致服务端错误：{&#x27;code&#x27;: 500, &#x27;message&#x27;: &#x27;内部错误：list index out of range&#x27;, &#x27;data&#x27;: None}
+E       assert 500 == 200
+E        +  where 500 = &lt;Response [500]&gt;.status_code
+
+tests\test_02_products.py:43: AssertionError</pre><pre>[
+  {
+    &quot;method&quot;: &quot;GET&quot;,
+    &quot;url&quot;: &quot;http://127.0.0.1:8002/api/products/&quot;,
+    &quot;request&quot;: {
+      &quot;json&quot;: null,
+      &quot;params&quot;: {
+        &quot;page&quot;: 999,
+        &quot;size&quot;: 2
+      },
+      &quot;token&quot;: false
+    },
+    &quot;response&quot;: {
+      &quot;status_code&quot;: 500,
+      &quot;body&quot;: {
+        &quot;code&quot;: 500,
+        &quot;message&quot;: &quot;内部错误：list index out of range&quot;,
+        &quot;data&quot;: null
+      }
+    },
+    &quot;duration_ms&quot;: 21.4
+  }
+]</pre></details><div class="nodeid">tests/test_02_products.py::test_product_list_page_out_of_range_empty</div></td><td class="mono">GET products/</td><td class="mono">22ms</td><td><span class="pill dup">DEF-002</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_product_list_category_filter</b><div class="nodeid">tests/test_02_products.py::test_product_list_category_filter</div></td><td class="mono">GET products/</td><td class="mono">51ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_product_detail</b><div class="nodeid">tests/test_02_products.py::test_product_detail</div></td><td class="mono">GET products/1210/</td><td class="mono">52ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_product_detail_not_found_404</b><div class="nodeid">tests/test_02_products.py::test_product_detail_not_found_404</div></td><td class="mono">GET products/999999/</td><td class="mono">41ms</td><td><span class="pill muted">—</span></td></tr>
+<tr><td colspan="5" class="group">03 商品搜索（5 条）</td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_search_keyword_hit</b><div class="nodeid">tests/test_03_search.py::test_search_keyword_hit</div></td><td class="mono">GET products/search/</td><td class="mono">40ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_search_case_insensitive</b><div class="nodeid">tests/test_03_search.py::test_search_case_insensitive</div></td><td class="mono">GET products/search/</td><td class="mono">33ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_search_no_result_empty</b><div class="nodeid">tests/test_03_search.py::test_search_no_result_empty</div></td><td class="mono">GET products/search/</td><td class="mono">49ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class="fail"><td><span class="pill bad">失败</span></td><td><b>test_search_excludes_off_shelf</b><details><summary>展开断言失败信息与请求响应证据</summary><pre>api = &lt;tests.client.ApiClient object at 0x00000192EA613410&gt;
+
+    @pytest.mark.defect(&quot;DEF-003&quot;)
+    @allure.severity(allure.severity_level.NORMAL)
+    def test_search_excludes_off_shelf(api):
+        &quot;&quot;&quot;已下架商品不能出现在搜索结果里（缺陷打开时会混入）&quot;&quot;&quot;
+        with allure.step(&quot;搜索「校园」，检查每一条的状态&quot;):
+            resp, body = api.get(&quot;/api/products/search/&quot;, params={&quot;kw&quot;: &quot;校园&quot;})
+        assert resp.status_code == 200
+        items = body[&quot;data&quot;][&quot;items&quot;]
+        assert items
+        off = [i[&quot;name&quot;] for i in items if i[&quot;status&quot;] != &quot;on_sale&quot;]
+&gt;       assert not off, f&quot;搜索结果混入已下架商品：{off}&quot;
+E       AssertionError: 搜索结果混入已下架商品：[&#x27;下架校园台灯&#x27;]
+E       assert not [&#x27;下架校园台灯&#x27;]
+
+tests\test_03_search.py:47: AssertionError</pre><pre>[
+  {
+    &quot;method&quot;: &quot;GET&quot;,
+    &quot;url&quot;: &quot;http://127.0.0.1:8002/api/products/search/&quot;,
+    &quot;request&quot;: {
+      &quot;json&quot;: null,
+      &quot;params&quot;: {
+        &quot;kw&quot;: &quot;校园&quot;
+      },
+      &quot;token&quot;: false
+    },
+    &quot;response&quot;: {
+      &quot;status_code&quot;: 200,
+      &quot;body&quot;: {
+        &quot;code&quot;: 0,
+        &quot;message&quot;: &quot;ok&quot;,
+        &quot;data&quot;: {
+          &quot;items&quot;: [
+            {
+              &quot;id&quot;: 1250,
+              &quot;name&quot;: &quot;校园自行车&quot;,
+              &quot;price&quot;: 12900,
+              &quot;stock&quot;: 3,
+              &quot;category&quot;: &quot;出行&quot;,
+              &quot;status&quot;: &quot;on_sale&quot;
+            },
+            {
+              &quot;id&quot;: 1253,
+              &quot;name&quot;: &quot;下架校园台灯&quot;,
+              &quot;price&quot;: 4900,
+              &quot;stock&quot;: 0,
+              &quot;category&quot;: &quot;生活&quot;,
+              &quot;status&quot;: &quot;off_shelf&quot;
+            }
+          ],
+          &quot;total&quot;: 2,
+          &quot;kw&quot;: &quot;校园&quot;
+        }
+      }
+    },
+    &quot;duration_ms&quot;: 37.9
+  }
+]</pre></details><div class="nodeid">tests/test_03_search.py::test_search_excludes_off_shelf</div></td><td class="mono">GET products/search/</td><td class="mono">38ms</td><td><span class="pill dup">DEF-003</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_search_special_chars_no_500</b><div class="nodeid">tests/test_03_search.py::test_search_special_chars_no_500</div></td><td class="mono">GET products/search/</td><td class="mono">30ms</td><td><span class="pill muted">—</span></td></tr>
+<tr><td colspan="5" class="group">04 购物车（6 条）</td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_cart_add_item</b><div class="nodeid">tests/test_04_cart.py::test_cart_add_item</div></td><td class="mono">POST cart/items/</td><td class="mono">56ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class="fail"><td><span class="pill bad">失败</span></td><td><b>test_cart_add_same_item_accumulates</b><details><summary>展开断言失败信息与请求响应证据</summary><pre>logged_in = &lt;tests.client.ApiClient object at 0x00000192EB808EC0&gt;
+
+    @pytest.mark.defect(&quot;DEF-004&quot;)
+    @allure.severity(allure.severity_level.NORMAL)
+    def test_cart_add_same_item_accumulates(logged_in):
+        &quot;&quot;&quot;重复添加同一商品应累加数量而不是生成重复行（缺陷打开时会重复）&quot;&quot;&quot;
+        pid = _ipad(logged_in)
+        with allure.step(&quot;连续两次添加同一商品&quot;):
+            r1, _ = logged_in.post(&quot;/api/cart/items/&quot;, {&quot;product_id&quot;: pid, &quot;qty&quot;: 1})
+            r2, b2 = logged_in.post(&quot;/api/cart/items/&quot;, {&quot;product_id&quot;: pid, &quot;qty&quot;: 1})
+        assert r1.status_code == r2.status_code == 201
+        items = b2[&quot;data&quot;][&quot;cart&quot;][&quot;items&quot;]
+&gt;       assert len(items) == 1, f&quot;购物车出现 {len(items)} 行相同商品，未做幂等累加&quot;
+E       AssertionError: 购物车出现 2 行相同商品，未做幂等累加
+E       assert 2 == 1
+E        +  where 2 = len([{&#x27;id&#x27;: 13, &#x27;product_id&#x27;: 1273, &#x27;name&#x27;: &#x27;二手 iPad Air 5&#x27;, &#x27;price&#x27;: 189900, ...}, {&#x27;id&#x27;: 14, &#x27;product_id&#x27;: 1273, &#x27;name&#x27;: &#x27;二手 iPad Air 5&#x27;, &#x27;price&#x27;: 189900, ...}])
+
+tests\test_04_cart.py:33: AssertionError</pre><pre>[
+  {
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;url&quot;: &quot;http://127.0.0.1:8002/api/cart/items/&quot;,
+    &quot;request&quot;: {
+      &quot;json&quot;: {
+        &quot;product_id&quot;: 1273,
+        &quot;qty&quot;: 1
+      },
+      &quot;params&quot;: null,
+      &quot;token&quot;: true
+    },
+    &quot;response&quot;: {
+      &quot;status_code&quot;: 201,
+      &quot;body&quot;: {
+        &quot;code&quot;: 0,
+        &quot;message&quot;: &quot;已加入购物车&quot;,
+        &quot;data&quot;: {
+          &quot;item&quot;: {
+            &quot;id&quot;: 13,
+            &quot;product_id&quot;: 1273,
+            &quot;qty&quot;: 1
+          },
+          &quot;cart&quot;: {
+            &quot;items&quot;: [
+              {
+                &quot;id&quot;: 13,
+                &quot;product_id&quot;: 1273,
+                &quot;name&quot;: &quot;二手 iPad Air 5&quot;,
+                &quot;price&quot;: 189900,
+                &quot;qty&quot;: 1
+              }
+            ],
+            &quot;total_qty&quot;: 1,
+            &quot;total_amount&quot;: 189900
+          },
+          &quot;created&quot;: true
+        }
+      }
+    },
+    &quot;duration_ms&quot;: 32.8
+  },
+  {
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;url&quot;: &quot;http://127.0.0.1:8002/api/cart/items/&quot;,
+    &quot;request&quot;: {
+      &quot;json&quot;: {
+        &quot;product_id&quot;: 1273,
+        &quot;qty&quot;: 1
+      },
+      &quot;params&quot;: null,
+      &quot;token&quot;: true
+    },
+    &quot;response&quot;: {
+      &quot;status_code&quot;: 201,
+      &quot;body&quot;: {
+        &quot;code&quot;: 0,
+        &quot;message&quot;: &quot;已加入购物车&quot;,
+        &quot;data&quot;: {
+          &quot;item&quot;: {
+            &quot;id&quot;: 14,
+            &quot;product_id&quot;: 1273,
+            &quot;qty&quot;: 1
+          },
+          &quot;cart&quot;: {
+            &quot;items&quot;: [
+              {
+                &quot;id&quot;: 13,
+                &quot;product_id&quot;: 1273,
+                &quot;name&quot;: &quot;二手 iPad Air 5&quot;,
+                &quot;price&quot;: 189900,
+                &quot;qty&quot;: 1
+              },
+              {
+                &quot;id&quot;: 14,
+                &quot;product_id&quot;: 1273,
+                &quot;name&quot;: &quot;二手 iPad Air 5&quot;,
+                &quot;price&quot;: 189900,
+                &quot;qty&quot;: 1
+              }
+            ],
+            &quot;total_qty&quot;: 2,
+            &quot;total_amount&quot;: 379800
+          },
+          &quot;created&quot;: true
+        }
+      }
+    },
+    &quot;duration_ms&quot;: 29.8
+  }
+]</pre></details><div class="nodeid">tests/test_04_cart.py::test_cart_add_same_item_accumulates</div></td><td class="mono">POST cart/items/</td><td class="mono">83ms</td><td><span class="pill dup">DEF-004</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_cart_list_total</b><div class="nodeid">tests/test_04_cart.py::test_cart_list_total</div></td><td class="mono">GET cart/</td><td class="mono">120ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_cart_remove_item</b><div class="nodeid">tests/test_04_cart.py::test_cart_remove_item</div></td><td class="mono">DELETE cart/items/17/</td><td class="mono">81ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_cart_add_unauthorized_401</b><div class="nodeid">tests/test_04_cart.py::test_cart_add_unauthorized_401</div></td><td class="mono">POST cart/items/</td><td class="mono">31ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_cart_invalid_qty_400</b><div class="nodeid">tests/test_04_cart.py::test_cart_invalid_qty_400</div></td><td class="mono">POST cart/items/</td><td class="mono">40ms</td><td><span class="pill muted">—</span></td></tr>
+<tr><td colspan="5" class="group">05 订单（6 条）</td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_order_create_success</b><div class="nodeid">tests/test_05_orders.py::test_order_create_success</div></td><td class="mono">POST orders/</td><td class="mono">47ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class="fail"><td><span class="pill bad">失败</span></td><td><b>test_order_reject_when_stock_insufficient</b><details><summary>展开断言失败信息与请求响应证据</summary><pre>logged_in = &lt;tests.client.ApiClient object at 0x00000192EB813310&gt;
+
+    @pytest.mark.defect(&quot;DEF-005&quot;)
+    @allure.severity(allure.severity_level.CRITICAL)
+    def test_order_reject_when_stock_insufficient(logged_in):
+        &quot;&quot;&quot;库存只有 1 件时买 5 件必须 409（缺陷打开时会超卖）&quot;&quot;&quot;
+        product = logged_in.product_by_name(&quot;考研数学真题&quot;)
+        assert product[&quot;stock&quot;] == 1, &quot;种子数据异常：该商品库存应为 1&quot;
+        with allure.step(&quot;用超过库存的数量下单&quot;):
+            resp, body = logged_in.post(&quot;/api/orders/&quot;,
+                                        {&quot;product_id&quot;: product[&quot;id&quot;], &quot;qty&quot;: 5})
+&gt;       assert resp.status_code == 409, f&quot;库存不足仍然下单成功，发生超卖：{body}&quot;
+E       AssertionError: 库存不足仍然下单成功，发生超卖：{&#x27;code&#x27;: 0, &#x27;message&#x27;: &#x27;下单成功&#x27;, &#x27;data&#x27;: {&#x27;id&#x27;: 19, &#x27;order_no&#x27;: &#x27;ORD5F9FF9B7B7E0&#x27;, &#x27;user&#x27;: &#x27;alice&#x27;, &#x27;product_id&#x27;: 1323, &#x27;qty&#x27;: 5, &#x27;unit_price&#x27;: 3900, &#x27;total&#x27;: 19500, &#x27;status&#x27;: &#x27;created&#x27;, &#x27;paid_count&#x27;: 0, &#x27;created_at&#x27;: &#x27;2026-11-16T15:43:20.754011+00:00&#x27;}}
+E       assert 201 == 409
+E        +  where 201 = &lt;Response [201]&gt;.status_code
+
+tests\test_05_orders.py:30: AssertionError</pre><pre>[
+  {
+    &quot;method&quot;: &quot;GET&quot;,
+    &quot;url&quot;: &quot;http://127.0.0.1:8002/api/products/&quot;,
+    &quot;request&quot;: {
+      &quot;json&quot;: null,
+      &quot;params&quot;: {
+        &quot;page&quot;: 1,
+        &quot;size&quot;: 50
+      },
+      &quot;token&quot;: true
+    },
+    &quot;response&quot;: {
+      &quot;status_code&quot;: 200,
+      &quot;body&quot;: {
+        &quot;code&quot;: 0,
+        &quot;message&quot;: &quot;ok&quot;,
+        &quot;data&quot;: {
+          &quot;items&quot;: [
+            {
+              &quot;id&quot;: 1321,
+              &quot;name&quot;: &quot;二手 iPad Air 5&quot;,
+              &quot;price&quot;: 189900,
+              &quot;stock&quot;: 5,
+              &quot;category&quot;: &quot;数码&quot;,
+              &quot;status&quot;: &quot;on_sale&quot;
+            },
+            {
+              &quot;id&quot;: 1322,
+              &quot;name&quot;: &quot;校园自行车&quot;,
+              &quot;price&quot;: 12900,
+              &quot;stock&quot;: 3,
+              &quot;category&quot;: &quot;出行&quot;,
+              &quot;status&quot;: &quot;on_sale&quot;
+            },
+            {
+              &quot;id&quot;: 1323,
+              &quot;name&quot;: &quot;考研数学真题&quot;,
+              &quot;price&quot;: 3900,
+              &quot;stock&quot;: 1,
+              &quot;category&quot;: &quot;图书&quot;,
+              &quot;status&quot;: &quot;on_sale&quot;
+            },
+            {
+              &quot;id&quot;: 1324,
+              &quot;name&quot;: &quot;机械键盘&quot;,
+              &quot;price&quot;: 25900,
+              &quot;stock&quot;: 6,
+              &quot;category&quot;: &quot;数码&quot;,
+              &quot;status&quot;: &quot;on_sale&quot;
+            },
+            {
+              &quot;id&quot;: 1326,
+              &quot;name&quot;: &quot;蓝牙耳机&quot;,
+              &quot;price&quot;: 9900,
+              &quot;stock&quot;: 2,
+              &quot;category&quot;: &quot;数码&quot;,
+              &quot;status&quot;: &quot;on_sale&quot;
+            },
+            {
+              &quot;id&quot;: 1327,
+              &quot;name&quot;: &quot;保温杯&quot;,
+              &quot;price&quot;: 2900,
+              &quot;stock&quot;: 4,
+              &quot;category&quot;: &quot;生活&quot;,
+              &quot;status&quot;: &quot;on_sale&quot;
+            },
+            {
+              &quot;id&quot;: 1328,
+              &quot;name&quot;: &quot;显示器支架&quot;,
+              &quot;price&quot;: 6900,
+              &quot;stock&quot;: 2,
+              &quot;category&quot;: &quot;数码&quot;,
+              &quot;status&quot;: &quot;on_sale&quot;
+            }
+          ],
+          &quot;total&quot;: 7,
+          &quot;page&quot;: 1,
+          &quot;size&quot;: 50,
+          &quot;has_more&quot;: false
+        }
+      }
+    },
+    &quot;duration_ms&quot;: 19.6
+  },
+  {
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;url&quot;: &quot;http://127.0.0.1:8002/api/orders/&quot;,
+    &quot;request&quot;: {
+      &quot;json&quot;: {
+        &quot;product_id&quot;: 1323,
+        &quot;qty&quot;: 5
+      },
+      &quot;params&quot;: null,
+      &quot;token&quot;: true
+    },
+    &quot;response&quot;: {
+      &quot;status_code&quot;: 201,
+      &quot;body&quot;: {
+        &quot;code&quot;: 0,
+        &quot;message&quot;: &quot;下单成功&quot;,
+        &quot;data&quot;: {
+          &quot;id&quot;: 19,
+          &quot;order_no&quot;: &quot;ORD5F9FF9B7B7E0&quot;,
+          &quot;user&quot;: &quot;alice&quot;,
+          &quot;product_id&quot;: 1323,
+          &quot;qty&quot;: 5,
+          &quot;unit_price&quot;: 3900,
+          &quot;total&quot;: 19500,
+          &quot;status&quot;: &quot;created&quot;,
+          &quot;paid_count&quot;: 0,
+          &quot;created_at&quot;: &quot;2026-11-16T15:43:20.754011+00:00&quot;
+        }
+      }
+    },
+    &quot;duration_ms&quot;: 30.9
+  }
+]</pre></details><div class="nodeid">tests/test_05_orders.py::test_order_reject_when_stock_insufficient</div></td><td class="mono">POST orders/</td><td class="mono">51ms</td><td><span class="pill dup">DEF-005</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_order_total_calculation</b><div class="nodeid">tests/test_05_orders.py::test_order_total_calculation</div></td><td class="mono">POST orders/</td><td class="mono">47ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_order_detail</b><div class="nodeid">tests/test_05_orders.py::test_order_detail</div></td><td class="mono">GET orders/21/</td><td class="mono">63ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_order_cancel</b><div class="nodeid">tests/test_05_orders.py::test_order_cancel</div></td><td class="mono">POST orders/22/cancel/</td><td class="mono">76ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_order_create_unauthorized_401</b><div class="nodeid">tests/test_05_orders.py::test_order_create_unauthorized_401</div></td><td class="mono">POST orders/</td><td class="mono">34ms</td><td><span class="pill muted">—</span></td></tr>
+<tr><td colspan="5" class="group">06 支付与越权（4 条）</td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_pay_success</b><div class="nodeid">tests/test_06_pay.py::test_pay_success</div></td><td class="mono">POST orders/23/pay/</td><td class="mono">77ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class="fail"><td><span class="pill bad">失败</span></td><td><b>test_pay_duplicate_rejected</b><details><summary>展开断言失败信息与请求响应证据</summary><pre>logged_in = &lt;tests.client.ApiClient object at 0x00000192EB812740&gt;
+
+    @pytest.mark.defect(&quot;DEF-006&quot;)
+    @allure.severity(allure.severity_level.CRITICAL)
+    def test_pay_duplicate_rejected(logged_in):
+        &quot;&quot;&quot;同一订单重复支付必须被幂等拦截（缺陷打开时会重复扣款）&quot;&quot;&quot;
+        _, created = logged_in.create_order(&quot;蓝牙耳机&quot;, 1)
+        order_id = created[&quot;data&quot;][&quot;id&quot;]
+        with allure.step(&quot;第一次支付&quot;):
+            r1, _ = logged_in.post(f&quot;/api/orders/{order_id}/pay/&quot;, {})
+        with allure.step(&quot;第二次支付（重复请求）&quot;):
+            r2, b2 = logged_in.post(f&quot;/api/orders/{order_id}/pay/&quot;, {})
+        assert r1.status_code == 200
+&gt;       assert r2.status_code == 409, f&quot;重复支付未被拦截，存在重复扣款：{b2}&quot;
+E       AssertionError: 重复支付未被拦截，存在重复扣款：{&#x27;code&#x27;: 0, &#x27;message&#x27;: &#x27;支付成功&#x27;, &#x27;data&#x27;: {&#x27;id&#x27;: 24, &#x27;order_no&#x27;: &#x27;ORD3FFE06ED5538&#x27;, &#x27;status&#x27;: &#x27;paid&#x27;, &#x27;paid_count&#x27;: 2}}
+E       assert 200 == 409
+E        +  where 200 = &lt;Response [200]&gt;.status_code
+
+tests\test_06_pay.py:32: AssertionError</pre><pre>[
+  {
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;url&quot;: &quot;http://127.0.0.1:8002/api/orders/24/pay/&quot;,
+    &quot;request&quot;: {
+      &quot;json&quot;: {},
+      &quot;params&quot;: null,
+      &quot;token&quot;: true
+    },
+    &quot;response&quot;: {
+      &quot;status_code&quot;: 200,
+      &quot;body&quot;: {
+        &quot;code&quot;: 0,
+        &quot;message&quot;: &quot;支付成功&quot;,
+        &quot;data&quot;: {
+          &quot;id&quot;: 24,
+          &quot;order_no&quot;: &quot;ORD3FFE06ED5538&quot;,
+          &quot;status&quot;: &quot;paid&quot;,
+          &quot;paid_count&quot;: 1
+        }
+      }
+    },
+    &quot;duration_ms&quot;: 28.5
+  },
+  {
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;url&quot;: &quot;http://127.0.0.1:8002/api/orders/24/pay/&quot;,
+    &quot;request&quot;: {
+      &quot;json&quot;: {},
+      &quot;params&quot;: null,
+      &quot;token&quot;: true
+    },
+    &quot;response&quot;: {
+      &quot;status_code&quot;: 200,
+      &quot;body&quot;: {
+        &quot;code&quot;: 0,
+        &quot;message&quot;: &quot;支付成功&quot;,
+        &quot;data&quot;: {
+          &quot;id&quot;: 24,
+          &quot;order_no&quot;: &quot;ORD3FFE06ED5538&quot;,
+          &quot;status&quot;: &quot;paid&quot;,
+          &quot;paid_count&quot;: 2
+        }
+      }
+    },
+    &quot;duration_ms&quot;: 30.4
+  }
+]</pre></details><div class="nodeid">tests/test_06_pay.py::test_pay_duplicate_rejected</div></td><td class="mono">POST orders/24/pay/</td><td class="mono">103ms</td><td><span class="pill dup">DEF-006</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_pay_status_after_success</b><div class="nodeid">tests/test_06_pay.py::test_pay_status_after_success</div></td><td class="mono">GET orders/25/</td><td class="mono">94ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_order_of_other_user_403</b><div class="nodeid">tests/test_06_pay.py::test_order_of_other_user_403</div></td><td class="mono">POST orders/</td><td class="mono">68ms</td><td><span class="pill muted">—</span></td></tr>
+<tr><td colspan="5" class="group">07 契约与性能（2 条）</td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_unified_response_contract</b><div class="nodeid">tests/test_07_contract.py::test_unified_response_contract</div></td><td class="mono">GET auth/profile/</td><td class="mono">72ms</td><td><span class="pill muted">—</span></td></tr>
+<tr class=""><td><span class="pill ok">通过</span></td><td><b>test_api_latency_sla</b><div class="nodeid">tests/test_07_contract.py::test_api_latency_sla</div></td><td class="mono">GET products/</td><td class="mono">121ms</td><td><span class="pill muted">—</span></td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>缺陷单 <span class="sub">6 条规范化记录 · 本轮抓到 6 条</span></h2>
+    <div class="defects"><div class="defect found"><span class="pill dup">DEF-001</span> <span class="pill warn">P0 / 致命</span> <span class="pill bad">本轮抓到</span><h3>错误密码仍可登录并签发 token，存在认证绕过</h3><div class="mono" style="color:var(--muted)">POST /api/auth/login/</div><dl><dt>复现步骤</dt><dd><ol><li>1. POST /api/auth/login/，body = {&quot;username&quot;:&quot;alice&quot;,&quot;password&quot;:&quot;wrong-pwd&quot;}</li><li>2. 观察 HTTP 状态码与响应体</li></ol></dd><dt>预期结果</dt><dd>HTTP 401，code=401，data 为 null，不返回任何 token</dd><dt>实际结果</dt><dd>HTTP 200，code=0，data 中携带有效 token，攻击者可直接访问 /api/auth/profile/</dd><dt>根因推测</dt><dd>登录分支只判断用户是否存在，漏掉密码比对（等价于 if user: 直接放行）</dd><dt>修复建议</dt><dd>补全 check_password；失败时统一返回 401 且不写 token；补一条越权访问回归用例</dd><dt>关联用例</dt><dd class="mono">test_01_health_auth.py::test_login_wrong_password_rejected</dd></dl></div>
+<div class="defect found"><span class="pill dup">DEF-002</span> <span class="pill warn">P1 / 严重</span> <span class="pill bad">本轮抓到</span><h3>商品列表页码越界返回 500，未做边界兜底</h3><div class="mono" style="color:var(--muted)">GET /api/products/?page=999&amp;size=2</div><dl><dt>复现步骤</dt><dd><ol><li>1. GET /api/products/?page=1&amp;size=2 确认正常</li><li>2. GET /api/products/?page=999&amp;size=2</li></ol></dd><dt>预期结果</dt><dd>HTTP 200，data.items=[]，data.total / data.page 保持一致，不报错</dd><dt>实际结果</dt><dd>HTTP 500，响应体为服务端错误，前端下拉加载更多时白屏</dd><dt>根因推测</dt><dd>切片下标未做 clamp，且异常没有统一转成空结果，直接冒泡到框架 500</dd><dt>修复建议</dt><dd>page 越界时返回空列表；对 page/size 做正整数校验；统一异常处理器转 code=400</dd><dt>关联用例</dt><dd class="mono">test_02_products.py::test_product_list_page_out_of_range_empty</dd></dl></div>
+<div class="defect found"><span class="pill dup">DEF-003</span> <span class="pill warn">P1 / 严重</span> <span class="pill bad">本轮抓到</span><h3>搜索结果包含已下架商品，状态过滤缺失</h3><div class="mono" style="color:var(--muted)">GET /api/products/search/?kw=校园</div><dl><dt>复现步骤</dt><dd><ol><li>1. GET /api/products/search/?kw=校园</li><li>2. 检查返回列表中每一条的 status 字段</li></ol></dd><dt>预期结果</dt><dd>仅返回 status=on_sale 的商品，下架商品不可被搜到</dd><dt>实际结果</dt><dd>返回中包含 off_shelf 商品，用户点进详情页后无法下单</dd><dt>根因推测</dt><dd>搜索查询只拼了 name__icontains，漏掉 status=on_sale 条件</dd><dt>修复建议</dt><dd>搜索与列表共用同一个「可见商品」QuerySet；补下架商品不出现在搜索的用例</dd><dt>关联用例</dt><dd class="mono">test_03_search.py::test_search_excludes_off_shelf</dd></dl></div>
+<div class="defect found"><span class="pill dup">DEF-004</span> <span class="pill warn">P1 / 严重</span> <span class="pill bad">本轮抓到</span><h3>购物车重复添加同一商品未累加数量，生成重复行</h3><div class="mono" style="color:var(--muted)">POST /api/cart/items/</div><dl><dt>复现步骤</dt><dd><ol><li>1. 带 token POST /api/cart/items/ {&quot;product_id&quot;:1,&quot;qty&quot;:1}</li><li>2. 用同样参数再请求一次</li><li>3. GET /api/cart/ 查看行数和数量</li></ol></dd><dt>预期结果</dt><dd>购物车仅 1 行，qty=2（接口幂等、数量累加）</dd><dt>实际结果</dt><dd>购物车出现 2 行相同商品，行数 2、总数量 2，结算页重复展示</dd><dt>根因推测</dt><dd>每次请求直接 create，未用 get_or_create / 唯一约束 (user, product)</dd><dt>修复建议</dt><dd>以 (user, product) 唯一键 upsert，用 F(&#x27;qty&#x27;) + n 原子累加；数据库补联合唯一约束</dd><dt>关联用例</dt><dd class="mono">test_04_cart.py::test_cart_add_same_item_accumulates</dd></dl></div>
+<div class="defect found"><span class="pill dup">DEF-005</span> <span class="pill warn">P0 / 致命</span> <span class="pill bad">本轮抓到</span><h3>下单未校验库存且未扣减库存，可超卖</h3><div class="mono" style="color:var(--muted)">POST /api/orders/</div><dl><dt>复现步骤</dt><dd><ol><li>1. 查询商品 3 的 stock=1</li><li>2. 带 token POST /api/orders/ {&quot;product_id&quot;:3,&quot;qty&quot;:5}</li><li>3. 再查商品 3 的库存</li></ol></dd><dt>预期结果</dt><dd>HTTP 409，code=409，提示库存不足；库存不变</dd><dt>实际结果</dt><dd>HTTP 201 下单成功，total 按 5 件计算，stock 仍为 1 → 超卖</dd><dt>根因推测</dt><dd>创建订单前缺少 stock &gt;= qty 判断，且没有事务内条件更新库存</dd><dt>修复建议</dt><dd>事务内用条件更新 UPDATE ... WHERE stock &gt;= qty 原子扣减，受影响行数为 0 则回滚返回 409</dd><dt>关联用例</dt><dd class="mono">test_05_orders.py::test_order_reject_when_stock_insufficient</dd></dl></div>
+<div class="defect found"><span class="pill dup">DEF-006</span> <span class="pill warn">P0 / 致命</span> <span class="pill bad">本轮抓到</span><h3>重复支付未拦截，同一订单被重复扣款</h3><div class="mono" style="color:var(--muted)">POST /api/orders/&lt;id&gt;/pay/</div><dl><dt>复现步骤</dt><dd><ol><li>1. 对同一订单连续两次 POST /api/orders/&lt;id&gt;/pay/</li><li>2. 观察第二次响应与订单 paid_count</li></ol></dd><dt>预期结果</dt><dd>第一次 200，第二次 409（或 200 但幂等返回同一结果），paid_count 恒为 1</dd><dt>实际结果</dt><dd>两次都返回 200 且提示支付成功，paid_count=2，存在重复扣款风险</dd><dt>根因推测</dt><dd>支付处理前没有状态机校验，也没有以 (order_no, 支付请求号) 做唯一约束</dd><dt>修复建议</dt><dd>支付前在事务内校验 status=created 并 CAS 更新为 paid；重复请求返回 409 或幂等返回原结果</dd><dt>关联用例</dt><dd class="mono">test_06_pay.py::test_pay_duplicate_rejected</dd></dl></div></div>
+  </section>
+
+  <div class="foot">
+    pytest 原始产物：<span class="mono">reports/junit.xml</span>　·　
+    Allure 原始结果：<span class="mono">reports/allure-results/20261116-234314</span>（有 Java 时可执行 allure serve）　·　
+    缺陷单 Markdown：<span class="mono">reports/defects.md</span>
+  </div>
+</div>
+</body>
+</html>

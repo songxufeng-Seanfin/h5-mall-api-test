@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}H5 商城接口回归 · 缺陷闭环{% endblock %}
+{% block content %}
+<div class="page">
+  <div class="hero">
+    <div class="hero-main">
+      <span class="eyebrow">PROJECT 04 · API REGRESSION</span>
+      <h1>H5 商城接口回归与缺陷单</h1>
+      <p>白话说：这次写的不是商城功能，而是一个「自动检查员」。它按清单逐个调用接口、比对结果，
+         把不对的地方记成缺陷单，最后出一份能看懂的测试报告。</p>
+    </div>
+    <div class="backend">
+      <b>35 条用例 · 6 张缺陷单</b>
+      <small>pytest 调度 + requests 发请求 + Allure 结果<br>
+      被测商城内置在本仓库，缺陷可一键注入 / 一键修复</small>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hide"></div>
+
+  <section>
+    <div class="terms">
+      <div class="term"><b>测试调度员 <span class="en">pytest</span></b>
+        <p>负责按清单一条条跑用例、统计通过失败、把失败原因收集起来。相当于「考试监考 + 阅卷」。</p></div>
+      <div class="term"><b>发请求的人 <span class="en">requests</span></b>
+        <p>用代码模拟手机 App 调接口，带上 token（登录凭证），拿到返回的 JSON 再断言对不对。</p></div>
+      <div class="term"><b>报告生成器 <span class="en">Allure</span></b>
+        <p>把每条用例的耗时、状态、请求响应证据整理成网页报告。本机无 Java，所以另附一个免安装单页报告。</p></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>操作台 <span class="sub">先跑一次看 6 个缺陷被抓出来，再点「模拟全部修复」重跑，看 35 条全绿</span></h2>
+    <div class="action-row">
+      <button class="btn btn-primary" id="btn-run">▶ 一键跑回归（35 条）</button>
+      <button class="btn" id="btn-fix">✓ 模拟开发修完全部缺陷</button>
+      <button class="btn btn-warn" id="btn-inject">↺ 重新注入全部缺陷</button>
+      <a class="btn" href="/report/" target="_blank">📄 打开测试报告</a>
+    </div>
+    <p class="hint" id="run-hint">回归会重置商城种子数据 → 逐条调用接口 → 生成 allure-results / JUnit XML / 单页报告 / 缺陷单。</p>
+  </section>
+
+  <section>
+    <h2>一轮回归是怎么走完的 <span class="sub">由外向内，六步</span></h2>
+    <ol class="steps">
+      <li><b>拉起被测服务</b><span>本地 Django 跑起商城 API，健康接口先探活</span></li>
+      <li><b>重置种子数据</b><span>每条用例前清场，避免上一条的订单影响下一条</span></li>
+      <li><b>登录拿 token</b><span>fixture 统一管登录态，用例里不重复写登录</span></li>
+      <li><b>逐条断言</b><span>状态码 / 统一契约 / 业务字段 / 权限 / 耗时</span></li>
+      <li><b>留证据</b><span>失败时把请求与响应 JSON 挂到报告附件</span></li>
+      <li><b>出报告与缺陷单</b><span>Allure 结果 + 单页 HTML + 6 条规范化缺陷单</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>最近一次回归 <span class="sub" id="run-at">尚未运行</span></h2>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <div class="grid-2">
+    <section>
+      <h2>用例清单 <span class="sub">按模块分组，红点 = 抓到缺陷</span></h2>
+      <div class="card" id="cases" style="max-height:560px;overflow-y:auto"></div>
+    </section>
+    <div>
+      <section>
+        <h2>缺陷开关 <span class="sub">打开 = 商城故意犯错</span></h2>
+        <div class="card" id="switches"></div>
+      </section>
+      <section>
+        <h2>接口请求流水 <span class="sub">最近 24 次</span></h2>
+        <div class="card table-wrap timeline" id="calls"></div>
+      </section>
+    </div>
+  </div>
+
+  <section>
+    <h2>规范化缺陷单 <span class="sub">6 条 · 点开看复现步骤 / 预期与实际 / 修复建议</span></h2>
+    <div class="defect-grid" id="defects"></div>
+  </section>
+
+  <div class="foot">H5 商城接口回归与缺陷单　|　pytest · requests · Allure　|　文档与代码同在仓库 docs/ 目录</div>
+</div>
+<script src="/static/app.js"></script>
+{% endblock %}
